@@ -4,6 +4,8 @@ import os
 import requests
 import wget
 import tarfile
+import argparse
+import multiprocessing
 
 #invalid_suffixes = ('.exe', '.whl')
 invalid_suffixes = ('.exe')
@@ -11,6 +13,7 @@ data_dir = '.'
 def single_package(package_name):
     url = "https://pypi.python.org/pypi/{}/json".format(package_name)
     r = requests.get(url)
+    print(r)
     if r.status_code != 200:
         print("failed to fetch {}".format(package_name))
         return 0
@@ -29,10 +32,27 @@ def single_package(package_name):
                     continue
                 wget.download(url, os.path.join(new_dir))
 def main():
-    package_name = sys.argv[1]
-    single_package(package_name)
+    #package_name = sys.argv[1]
+    '''
+    with open('lib_names.txt') as f:
+        for i in range(2):
+            package_name = f.readline().rstrip()
+            single_package(package_name)
+    '''
+    parser = argparse.ArgumentParser(
+        description="download all versions of a library")
+    parser.add_argument('path', metavar='lib_name_list', type=str,
+                        help='The path to the list of library names')
+    parser.add_argument('-n', metavar='parallel_number', type=str,
+                        help='The number of parallel works, default is 15', default=15)
+
+    args = parser.parse_args()
+    path = args.path
+    number = int(args.n)
+    with multiprocessing.Pool(processes=number) as pool:
+        with open(path) as f:
+            name_list = f.read().splitlines()
+        pool.map(single_package, iter(name_list))
 
 if __name__ == '__main__':
     main()
-
-
