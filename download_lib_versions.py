@@ -20,18 +20,23 @@ def single_package(package_name):
     working_dir = os.path.join(os.path.join(data_dir, package_name))
     if not os.path.exists(working_dir):
         os.mkdir(working_dir)
-        data= json.loads(r.text)
-        versions = data["releases"].keys()
-        for v in versions:
-            urls = [ele['url'] for ele in data["releases"][v]]
-            new_dir = os.path.join(working_dir, v)
-            if not os.path.exists(new_dir):
-                os.mkdir(new_dir)
-            for url in urls:
-                if url.endswith(invalid_suffixes):
-                    continue
-                wget.download(url, os.path.join(new_dir))
+    data = json.loads(r.text)
+    versions = data["releases"].keys()
+    for v in versions:
+        urls = [ele['url'] for ele in data["releases"][v]]
+        new_dir = os.path.join(working_dir, v)
+        if not os.path.exists(new_dir):
+            os.mkdir(new_dir)
+        for url in urls:
+            if url.endswith(invalid_suffixes):
+                continue
+            file_name = url.rsplit('/', 1)[-1]
+            if os.path.exists(os.path.join(new_dir, file_name)):
+                continue
+            wget.download(url, os.path.join(new_dir))
+
 def main():
+    #single_package("requests")
     #package_name = sys.argv[1]
     '''
     with open('lib_names.txt') as f:
@@ -39,6 +44,7 @@ def main():
             package_name = f.readline().rstrip()
             single_package(package_name)
     '''
+
     parser = argparse.ArgumentParser(
         description="download all versions of a library")
     parser.add_argument('path', metavar='lib_name_list', type=str,
