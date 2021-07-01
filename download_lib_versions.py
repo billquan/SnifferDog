@@ -6,11 +6,18 @@ import wget
 import tarfile
 import argparse
 import multiprocessing
+from time import sleep
 
 #invalid_suffixes = ('.exe', '.whl')
 invalid_suffixes = ('.exe')
-data_dir = '.'
+data_dir = '/data/sda/pypi_libs'
+counter = multiprocessing.Value('i', 0)
 def single_package(package_name):
+    global counter
+    with counter.get_lock():
+        counter.value += 1
+    print("counter.value:", counter.value)
+    sleep(1)
     url = "https://pypi.python.org/pypi/{}/json".format(package_name)
     r = requests.get(url)
     print(r)
@@ -57,7 +64,7 @@ def main():
     number = int(args.n)
     with multiprocessing.Pool(processes=number) as pool:
         with open(path) as f:
-            name_list = f.read().splitlines()
+            name_list = f.read().splitlines()[:2000]
         pool.map(single_package, iter(name_list))
 
 if __name__ == '__main__':
